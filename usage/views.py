@@ -39,11 +39,9 @@ class StartChargingView(APIView):
 class StopChargingView(APIView):
     # permission_classes=[permissions.IsAuthenticated]
     def post(self, request):
-        print(request.data["user_id"])
         user = get_object_or_404(UserModel, user_id=request.data["user_id"])
         usage_data = Usage.objects.filter(user=user.pk).order_by("-pk")[0]
         user_point = user.point
-        print(1)
         if usage_data.end_time == None:
             now = datetime.now()
             date_to_compare = datetime.strptime('19700101', '%Y%m%d')
@@ -80,7 +78,6 @@ class StopChargingView(APIView):
 
             #자동결제 카드가 등록되어 있고, 포인트가 모자랄 때
             elif user_point < amount and user.billing_key != None:
-                print(3)
                 access_token = get_iamport_access_token()
                 data = {
                     "buyer_name": user.user_id,
@@ -105,10 +102,9 @@ class StopChargingView(APIView):
 
             # 포인트도 없고, 자동결제도 등록되어있지 않을 때
             else:
-                print(4)
                 data = {
                     "buyer_name": user.user_id,
-                    "amount": f"{amount - user_point}",
+                    "amount": amount - user_point,
                     "merchant_uid": f"merchant_uid_{diff_time}",
                     "name": "포인트 차감 후 결제요청"
                 }
